@@ -1,0 +1,18 @@
+name: ebrun-original-news
+description: 获取亿邦动力网最新电商新闻报道。
+version: 0.1.0
+author: EbrunDeveloper
+date: 2026-04-13
+
+commands:
+  # 在此处定义命令
+  # - name: my-command
+  #   description: 命令描述
+  #   alias: mc
+  #   args:
+  #     - name: arg-name
+  #       description: 参数描述
+  #       required: true
+  #   options:
+  #     - name: option-name
+  #       description: 选项描述

@@ -248,14 +248,15 @@ class EbrunSkill {
     // 2. 标题与时间
     const subChannelDisplay = subChannel === '最新' ? '' : ` ${subChannel}`;
     output += `📰 亿邦原创新闻 | ${channel}${subChannelDisplay}\n`;
-    output += `获取时间: ${currentTime}\n`;
+    output += `获取时间：${currentTime.split(' ')[0]}\n`;
     output += `---\n\n`;
 
-    // 3. 文章列表
-    articles.forEach(article => {
-      output += `### [${article.title}](${article.url})\n`;
-      output += `👤 ${article.author}  ·  🕐 ${article.publishTime}\n`;
-      output += `${article.summary}\n\n`;
+    // 3. 文章列表 - 使用标准 Markdown 列表缩进，防止渲染器错误叠加序号
+    articles.forEach((article, index) => {
+      const num = index + 1;
+      output += `${num}. **[${article.title}](${article.url})**\n`;
+      output += `    👤 作者：${article.author} | 🕐 发布时间：${article.publishTime}\n`;
+      output += `    📝 ${article.summary}\n\n`;
     });
 
     // 4. 页脚处理
@@ -268,7 +269,7 @@ class EbrunSkill {
       output += `• "产业有什么新动态"\n`;
       output += `• "看看AI新闻"\n\n`;
     }
-    output += `更多资讯请见[亿邦官网](https://www.ebrun.com/)\n`;
+    output += `更多资讯请见 [亿邦官网](https://www.ebrun.com/)\n`;
 
     // 5. 追加更新提示
     if (this.updateAvailable) {
@@ -284,6 +285,62 @@ class EbrunSkill {
     const versionPath = join(__dirname, '..', 'references', 'version.json');
     this.localInfo = JSON.parse(readFileSync(versionPath, 'utf-8'));
     return this.localInfo!;
+  }
+
+  /**
+   * 构建版本文件的远程原始 URL
+   */
+  private buildRemoteUrl(baseUrl: string, type: 'github' | 'gitee'): string {
+    const cleanUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    if (type === 'github') {
+      return cleanUrl.replace('github.com', 'raw.githubusercontent.com') + '/main/references/version.json';
+    } else {
+      return cleanUrl + '/raw/main/references/version.json';
+    }
+  }
+
+  /**
+   * 后台检查更新 (增加 Gitee 降级逻辑)
+   */
+  private async checkUpdateInBackground(ctx: SkillContext): Promise<void> {
+    const local = this.loadLocalInfo();
+
+    // 检查检查间隔，如果没到时间跳过
+    const now = Date.now();
+    const interval = (local.check_interval_hours || 24) * 60 * 60 * 1000;
+    if (local.last_check_time && now - local.last_check_time < interval) {
+      return;
+    }
+
+    const fetchFn = ctx.fetch || globalThis.fetch;
+    if (typeof fetchFn !== 'function') return;
+
+    // 优先从 GitHub 检查，失败则尝试 Gitee
+    const urls = [
+      { url: this.buildRemoteUrl(local.update_url_github, 'github'), source: 'GitHub' },
+      { url: this.buildRemoteUrl(local.update_url_gitee, 'gitee'), source: 'Gitee' }
+    ].filter(item => item.url && isSafeUrl(item.url));
+
+    let remote: VersionInfo | null = null;
+    for (const item of urls) {
+      try {
+        const res = await fetchFn(item.url);
+        if (res.ok) {
+          remote = await res.json();
+          break; // 成功获取则停止尝试
+        }
+      } catch (e) {
+        // 忽略单个源的失败，尝试下一个
+      }
+    }
+
+    if (remote && remote.latest_version !== local.current_version) {
+      this.updateAvailable = {
+        version: remote.latest_version,
+        updateUrl: local.update_url_github,
+        changelogUrl: local.changelog_url_github
+      };
+    }
   }
 
   /**

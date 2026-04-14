@@ -1,0 +1,31 @@
+{
+  "name": "ebrun-original-news",
+  "version": "1.0.0",
+  "description": "获取亿邦动力网最新电商新闻报道",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ebrun",
+    "电商新闻",
+    "亿邦动力",
+    "跨境电商",
+    "产业电商",
+    "零售电商"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

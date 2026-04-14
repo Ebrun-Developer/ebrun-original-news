@@ -9,7 +9,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import os from 'os';
+import * as os from 'os';
 
 const execFileAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -326,7 +326,7 @@ class EbrunSkill {
       try {
         const res = await fetchFn(item.url);
         if (res.ok) {
-          remote = await res.json();
+          remote = await res.json() as VersionInfo;
           break; // 成功获取则停止尝试
         }
       } catch (e) {
@@ -355,7 +355,7 @@ class EbrunSkill {
     if (typeof fetchFn === 'function') {
       try {
         const res = await fetchFn(remoteUrl);
-        if (res.ok) remote = await res.json();
+        if (res.ok) remote = await res.json() as VersionInfo;
       } catch (e) {}
     }
 

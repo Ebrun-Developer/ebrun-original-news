@@ -6,41 +6,39 @@
 
 ## 中文
 
-获取亿邦动力网最新电商新闻报道。一个为 Claude Code / openclaw 设计的 Skill，自动绕过网络限制，支持终端美观输出。
+获取 **亿邦动力网** 最新电商新闻报道。一个为 Claude Code / OpenClaw 设计的 Skill，支持智能关键词匹配与多格式自适应输出。
 
 ### 📦 安装
 
-通过 skills-manager 安装：
-
 ```bash
-skill-add ebrun-original-news
-```
-
-或者直接克隆：
-
-```bash
-git clone https://github.com/<your-username>/ebrun-original-news.git
+git clone https://github.com/EbrunDeveloper/ebrun-original-news.git
 ```
 
 ### ✨ 功能特性
 
-- 🔍 **自动关键词匹配** - 根据自然语言查询自动识别目标频道
-- 📊 **双格式自动适配**：
+- 🔍 **智能关键词匹配** - 根据自然语言查询自动识别目标频道，支持主频道和子频道二级匹配
+- 📊 **多环境自适应输出**：
   - Claude Code 对话输出 **Markdown**（可点击链接，阅读舒适）
-  - openclaw 终端自动输出 **ASCII 表格**（整洁美观）
-- 🌐 **支持多频道** - 推荐、未来零售、跨境电商、产业互联网、品牌、AI 全覆盖
-- 🚀 **本地网络穿透** - 通过本地脚本请求，绕过 Claude Code 云环境网络限制
-- 🐍 **多语言实现** - 提供 Python 和 Bash 两个版本，按需选择
+  - OpenClaw 终端自动输出 **ASCII 表格**（整洁美观）
+  - 程序调用返回标准 **JSON** 便于二次处理
+- 🌐 **全覆盖频道分类** - 推荐、未来零售、跨境电商、产业互联网、品牌、AI 六大板块，包含细分垂直子频道
+- 🚀 **三级降级获取机制** - 原生请求 → Python 脚本 → Shell 脚本，确保在受限环境下仍能获取数据
+- 🛡️ **企业级安全加固** - SSRF 防护、错误信息脱敏、域名白名单机制
+- 🔄 **异步版本检查** - 后台自动检测更新，不影响主流程体验
+- 🐍 **双语言实现** - 同时提供 Python 和 Bash 两个本地脚本版本，按需选择
 
 ### 🎯 触发方式（Claude Code）
 
 以下任意语句都可以触发此技能：
 
-- `查亿邦最新文章` - 获取亿邦动力网最新文章
+- `查亿邦最新文章` - 获取亿邦动力网最新推荐文章
 - `查跨境最新文章` - 获取跨境电商相关最新文章
-- `产业最新报道` - 获取产业电商相关报道
-- `零售最新报道` - 获取零售电商相关报道
+- `产业最新报道` - 获取产业互联网相关报道
+- `零售最新报道` - 获取未来零售相关报道
 - `今日电商新闻` - 获取今日最新电商新闻
+- `亚马逊最新消息` - 获取亚马逊子频道文章
+- `看看有什么AI新闻` - 获取AI频道最新文章
+- `品牌全球化报道` - 获取品牌全球化子频道文章
 - `亿邦动力` - 快捷触发
 - `电商新闻` - 快捷触发
 
@@ -78,19 +76,40 @@ bash scripts/fetch_news.sh <api_url> --table
 bash scripts/fetch_news.sh --help
 ```
 
-### 📋 输出示例（终端表格）
+### 📋 输出示例
+
+#### Claude Code 对话 (Markdown)
+
+```
+📰 亿邦原创新闻 | 跨境电商 亚马逊
+获取时间: 2026/4/14 14:30:00
+---
+
+### [TikTok Shop 宣布东南亚新政策，佣金下调5%](https://www.ebrun.com/article/12345)
+👤 张晓明  ·  🕐 2026-04-13 10:30
+TikTok Shop今日宣布对东南亚市场卖家下调佣金费率，整体降幅约5%，旨在吸引更多品牌卖家入驻...
+
+### [亚马逊发布Q1财报，跨境卖家营收增长超预期](https://www.ebrun.com/article/12346)
+👤 李思思  ·  🕐 2026-04-13 09:15
+亚马逊发布2026年第一季度财报，跨境电商业务营收同比增长18%，超出市场预期...
+
+---
+更多资讯请见[亿邦官网](https://www.ebrun.com/)
+```
+
+#### 终端表格输出 (ASCII)
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
-│  亿邦动力网 - 最新电商新闻                                        │
+│  亿邦动力网 - 跨境电商 - 亚马逊                                     │
 ├───────────────────────────────────────────────────────────────────┤
-│   1. 跨境电商2026年一季度趋势分析报告                             │
-│       👤 张三             🕐 2026-04-13 10:30        │
-│       https://www.ebrun.com/article/12345                        │
+│   1. TikTok Shop 宣布东南亚新政策，佣金下调5%                      │
+│       👤 张晓明             🕐 2026-04-13 10:30                   │
+│       https://www.ebrun.com/article/12345                         │
 ├───────────────────────────────────────────────────────────────────┤
-│   2. TikTok Shop 宣布新政策，佣金下调                             │
-│       👤 李四             🕐 2026-04-13 09:15        │
-│       https://www.ebrun.com/article/12346                        │
+│   2. 亚马逊发布Q1财报，跨境卖家营收增长超预期                      │
+│       👤 李思思             🕐 2026-04-13 09:15                   │
+│       https://www.ebrun.com/article/12346                         │
 └───────────────────────────────────────────────────────────────────┘
 
 共 2 篇文章
@@ -98,18 +117,51 @@ bash scripts/fetch_news.sh --help
 
 ### 📁 支持的频道
 
-| 频道 | 子频道 |
-|------|--------|
-| 📰 **推荐** | 综合推荐 |
-| 🛒 **未来零售** | 淘宝天猫、抖音、京东、视频号、美团、快手、拼多多、小红书 |
-| 🌏 **跨境电商** | 亚马逊、阿里国际、TikTok、Temu、SHEIN |
-| 🏭 **产业互联网** | B2B、产业科技、数据要素、产业出海 |
-| 🏷️ **品牌** | 新竞争力品牌、品牌全球化 |
-| 🤖 **AI** | AI 相关报道 |
+| 一级频道 | 支持的子频道 |
+|---------|-------------|
+| 📰 **推荐** | 最新 |
+| 🛒 **未来零售** | 最新、淘宝天猫、抖音、京东、视频号、美团、快手、拼多多、小红书 |
+| 🌏 **跨境电商** | 最新、亚马逊、阿里国际、TikTok、Temu、SHEIN |
+| 🏭 **产业互联网** | 最新、B2B、产业科技、数据要素、产业出海、数智供应链、数智化采购 |
+| 🏷️ **品牌** | 最新、新竞争力品牌、品牌全球化 |
+| 🤖 **AI** | 最新 |
+
+### 🏗️ 技术架构
+
+```
+ebrun-original-news/
+├── src/
+│   └── index.ts          # 核心逻辑：频道匹配、数据获取、格式化输出
+├── scripts/
+│   ├── fetch_news.py    # Python 本地获取脚本
+│   └── fetch_news.sh    # Shell 本地获取脚本
+├── references/
+│   ├── channel-list.json # 频道配置列表
+│   └── version.json     # 版本信息（用于更新检查）
+├── SKILL.md             # Claude Code Skill 规范定义
+├── skill.yaml           # Skill 元数据
+└── api-reference.md     # API 接口文档
+```
+
+**核心设计：**
+
+1. **三级降级机制** - 优先使用原生 fetch，失败后自动降级到 Python/Shell 脚本，绕过 Claude Code 云环境网络限制
+2. **智能模糊匹配** - 支持用户自然语言查询，自动匹配最相关的频道和子频道
+3. **安全加固** - SSRF 防护、域名白名单、错误路径脱敏
+4. **异步更新检查** - 后台并行执行版本检查，有新版本时提示用户
+
+### 🔒 安全特性
+
+| 安全措施 | 说明 |
+|---------|------|
+| 域名白名单 | 仅允许请求 `ebrun.com` 和更新域名，防止 SSRF 攻击 |
+| HTTPS 强制 | 只允许 HTTPS 请求，禁止 HTTP 和 IP 直连 |
+| 错误脱敏 | 错误信息中的本地路径自动脱敏，保护用户隐私 |
+| 参数校验 | 对所有输入参数进行长度和类型校验 |
 
 ### 📡 数据来源
 
-- [亿邦动力网](https://www.ebrun.com/) - 权威电商行业媒体
+- [亿邦动力网](https://www.ebrun.com/)
 
 ### 👨‍💼 作者
 
@@ -123,41 +175,38 @@ MIT License - 详见 [LICENSE](LICENSE)
 
 ## English
 
-Get the latest e-commerce news from [Ebrun](https://www.ebrun.com/), a leading Chinese e-commerce industry media. A Claude Code / openclaw skill that bypasses network restrictions and automatically adapts output format.
+Get the latest e-commerce news from **[Ebrun](https://www.ebrun.com/)**, a leading Chinese e-commerce industry media. A Claude Code / OpenClaw Skill that features intelligent keyword matching and multi-format adaptive output.
 
 ### 📦 Installation
 
-Via skills-manager:
-
 ```bash
-skill-add ebrun-original-news
-```
-
-Or clone directly:
-
-```bash
-git clone https://github.com/<your-username>/ebrun-original-news.git
+git clone https://github.com/EbrunDeveloper/ebrun-original-news.git
 ```
 
 ### ✨ Features
 
-- 🔍 **Automatic keyword matching** - Identifies target channels based on natural language queries
-- 📊 **Auto-adaptive output format**:
-  - Claude Code conversation outputs **Markdown** (clickable links, comfortable reading)
-  - openclaw terminal automatically outputs **ASCII table** (clean and beautiful)
-- 🌐 **Multiple channels supported** - Covers recommendation, future retail, cross-border e-commerce, industrial internet, brands, and AI
-- 🚀 **Local network bypass** - Requests via local script, bypasses Claude Code cloud environment network restrictions
-- 🐍 **Dual implementation** - Provides both Python and Bash versions, choose as needed
+- 🔍 **Intelligent Keyword Matching** - Automatically identifies target channels based on natural language queries, supports primary and secondary channel matching
+- 📊 **Multi-environment Adaptive Output**:
+  - **Markdown** for Claude Code conversations (clickable links, comfortable reading)
+  - **ASCII Table** for OpenClaw terminal (clean and beautiful)
+  - Standard **JSON** for programmatic access
+- 🌐 **Comprehensive Channel Coverage** - Six major categories: Recommendation, Future Retail, Cross-border E-commerce, Industrial Internet, Brands, AI, with vertical sub-channels
+- 🚀 **Three-level Degradation Mechanism** - Native fetch → Python script → Shell script, ensuring data availability in restricted environments
+- 🛡️ **Enterprise-grade Security** - SSRF protection, error message sanitization, domain allowlist
+- 🔄 **Asynchronous Version Check** - Automatic background update checking without affecting main flow
+- 🐍 **Dual Implementation** - Both Python and Bash versions provided, choose as needed
 
-### 🎯 Trigger phrases (Claude Code)
+### 🎯 Trigger Phrases (Claude Code)
 
-This skill is triggered when user says:
+This Skill is triggered when user says:
 
 - "查亿邦最新文章" (Check latest Ebrun articles)
 - "查跨境最新文章" (Check latest cross-border articles)
 - "产业最新报道" (Industry latest reports)
 - "零售最新报道" (Retail latest reports)
 - "今日电商新闻" (Today's e-commerce news)
+- "亚马逊最新消息" (Latest news from Amazon)
+- "看看有什么AI新闻" (Check latest AI news)
 
 ### 🖥️ Command Line Usage
 
@@ -186,26 +235,47 @@ bash scripts/fetch_news.sh <api_url>
 # Force JSON output
 bash scripts/fetch_news.sh <api_url> --json
 
-# Force ASCII table output
+# Force ASCII table output (terminal viewing)
 bash scripts/fetch_news.sh <api_url> --table
 
 # Show help
 bash scripts/fetch_news.sh --help
 ```
 
-### 📋 Output Example (Terminal Table)
+### 📋 Output Example
+
+#### Claude Code Conversation (Markdown)
+
+```
+📰 亿邦原创新闻 | 跨境电商 亚马逊
+获取时间: 2026/4/14 14:30:00
+---
+
+### [TikTok Shop 宣布东南亚新政策，佣金下调5%](https://www.ebrun.com/article/12345)
+👤 张晓明  ·  🕐 2026-04-13 10:30
+TikTok Shop今日宣布对东南亚市场卖家下调佣金费率，整体降幅约5%，旨在吸引更多品牌卖家入驻...
+
+### [亚马逊发布Q1财报，跨境卖家营收增长超预期](https://www.ebrun.com/article/12346)
+👤 李思思  ·  🕐 2026-04-13 09:15
+亚马逊发布2026年第一季度财报，跨境电商业务营收同比增长18%，超出市场预期...
+
+---
+More news at [Ebrun Official Website](https://www.ebrun.com/)
+```
+
+#### Terminal Table Output (ASCII)
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
-│  亿邦动力网 - 最新电商新闻                                        │
+│  亿邦动力网 - 跨境电商 - 亚马逊                                     │
 ├───────────────────────────────────────────────────────────────────┤
-│   1. 跨境电商2026年一季度趋势分析报告                             │
-│       👤 张三             🕐 2026-04-13 10:30        │
-│       https://www.ebrun.com/article/12345                        │
+│   1. TikTok Shop 宣布东南亚新政策，佣金下调5%                      │
+│       👤 张晓明             🕐 2026-04-13 10:30                   │
+│       https://www.ebrun.com/article/12345                         │
 ├───────────────────────────────────────────────────────────────────┤
-│   2. TikTok Shop  announced new policy, commission reduced        │
-│       👤 Li Si             🕐 2026-04-13 09:15        │
-│       https://www.ebrun.com/article/12346                        │
+│   2. 亚马逊发布Q1财报，跨境卖家营收增长超预期                      │
+│       👤 李思思             🕐 2026-04-13 09:15                   │
+│       https://www.ebrun.com/article/12346                         │
 └───────────────────────────────────────────────────────────────────┘
 
 Total 2 articles
@@ -213,18 +283,51 @@ Total 2 articles
 
 ### 📁 Supported Channels
 
-| Channel | Sub-channels |
-|---------|--------------|
-| 📰 **Recommendation** | General recommendation |
-| 🛒 **Future Retail** | Taobao Tmall, Douyin, JD, Video Channel, Meituan, Kuaishou, Pinduoduo, Xiaohongshu |
-| 🌏 **Cross-border E-commerce** | Amazon, Alibaba International, TikTok, Temu, SHEIN |
-| 🏭 **Industrial Internet** | B2B, Industrial Technology, Data Elements, Industrial Going Global |
-| 🏷️ **Brands** | Competitive Brands, Brand Globalization |
-| 🤖 **AI** | AI related reports |
+| Primary Channel | Sub-channels |
+|-----------------|-------------|
+| 📰 **Recommendation** | Latest |
+| 🛒 **Future Retail** | Latest, Taobao Tmall, Douyin, JD, Video Channel, Meituan, Kuaishou, Pinduoduo, Xiaohongshu |
+| 🌏 **Cross-border E-commerce** | Latest, Amazon, Alibaba International, TikTok, Temu, SHEIN |
+| 🏭 **Industrial Internet** | Latest, B2B, Industrial Tech, Data Elements, Industrial Going Global, Digital Supply Chain |
+| 🏷️ **Brands** | Latest, Competitive Brands, Brand Globalization |
+| 🤖 **AI** | Latest |
+
+### 🏗️ Technical Architecture
+
+```
+ebrun-original-news/
+├── src/
+│   └── index.ts          # Core logic: channel matching, data fetching, formatting
+├── scripts/
+│   ├── fetch_news.py    # Python local fetch script
+│   └── fetch_news.sh    # Shell local fetch script
+├── references/
+│   ├── channel-list.json # Channel configuration
+│   └── version.json     # Version info for update checking
+├── SKILL.md             # Claude Code Skill specification
+├── skill.yaml           # Skill metadata
+└── api-reference.md     # API documentation
+```
+
+**Core Design:**
+
+1. **Three-level Degradation** - Prioritizes native fetch, automatically falls back to Python/Shell scripts to bypass Claude Code cloud environment network restrictions
+2. **Intelligent Fuzzy Matching** - Supports natural language queries, automatically matches the most relevant channel and sub-channel
+3. **Security Hardening** - SSRF protection, domain allowlist, error path sanitization
+4. **Asynchronous Update Check** - Background parallel version checking, prompts user when new version is available
+
+### 🔒 Security Features
+
+| Security Measure | Description |
+|-----------------|-------------|
+| Domain Allowlist | Only allows requests to authorized domains, prevents SSRF attacks |
+| HTTPS Enforced | Only allows HTTPS requests, prohibits HTTP and direct IP connections |
+| Error Sanitization | Local paths in error messages are automatically redacted to protect user privacy |
+| Parameter Validation | Validates all input parameters for length and type |
 
 ### 📡 Data Source
 
-- [Ebrun](https://www.ebrun.com/) - Authoritative e-commerce industry media in China
+- [Ebrun](https://www.ebrun.com/)
 
 ### 👨‍💼 Author
 

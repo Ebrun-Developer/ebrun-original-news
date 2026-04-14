@@ -1,6 +1,5 @@
 ---
-name: ebrun-news
-version: 1.0.0
+name: ebrun-original-news
 description: 
   获取亿邦动力网最新电商新闻报道。
   当用户说"查亿邦最新文章"、"查跨境最新文章"、"产业最新报道"、"零售最新报道"、"今日电商新闻"时触发。
@@ -101,65 +100,19 @@ description:
 
 ### 步骤5：格式化输出
 
-#### 按用户要求查询文章时的格式化输出
-```markdown
-📰 亿邦原创新闻 | {channel_name} {sub_channel_name}
-获取时间: {current_time}
----
+调用 `src/index.ts` 中的 `run()` 方法执行获取并输出结果：
 
-**[{title}]({url})**
-{author} · {publish_time}
-{summary}
-
-**[{title}]({url})**
-{author} · {publish_time}
-{summary}
-
----
-更多资讯请见[亿邦官网](https://www.ebrun.com/)
-```
-
-#### 频道未匹配，按推荐频道处理的格式化输出
-```markdown
-未找到"{用户输入}"频道的文章，将为您展示推荐内容。
-
-📰 亿邦原创新闻 | {channel_name} {sub_channel_name}
-获取时间: {current_time}
----
-
-**[{title}]({url})**
-{author} · {publish_time}
-{summary}
-
-**[{title}]({url})**
-{author} · {publish_time}
-{summary}
-
----
-可用的频道有：
-📰 推荐 | 🛒 未来零售 | 🌏 跨境电商 | 🏭 产业互联网 | 🏷️ 品牌 | 🤖 AI
-
-您可以直接说：
-• "查跨境最新文章" 或 "查亚马逊新闻"
-• "产业有什么新动态"
-• "看看AI新闻"
-
-更多资讯请见[亿邦官网](https://www.ebrun.com/)
-```
-
-**追加更新提示（如检测到新版本）：**
-
-如果步骤4检测到新版本可用，在页脚后追加：
-
-```
----
-💡 检测到有新版本可用（v{latest_version}），如需更新请回复"更新"，或访问 [更新链接]({update_url})
-```
+1. `run()` 方法内部完成频道匹配、API 获取、解析后自动格式化输出
+2. 输出格式为 Markdown，包含：
+   - 标题栏：📰 亿邦原创新闻 | 频道名称
+   - 文章列表：每条文章包含标题（链接）、作者、发布时间、摘要
+   - 页脚：可用频道提示和官网链接
+   - 如果检测到新版本，自动追加更新提示
 
 ## Output format 输出格式
 
 - 格式：Markdown
-- 标题区：📰 图标 + "亿邦原创新闻" + 日期范围 + 频道名称
+- 标题区：📰 图标 + "亿邦原创新闻" + 频道名称
 - 获取时间：显示当前时间
 - 文章列表：每条包含标题（带链接）、作者、发布时间、摘要
 - 分隔线：文章之间用空行分隔

@@ -17,3 +17,6 @@ commands:
         description: 返回文章数量（最大20）
         required: false
         default: '10'
+  - name: update
+    description: 检查并引导更新技能到最新版本
+    alias: u

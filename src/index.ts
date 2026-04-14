@@ -39,7 +39,11 @@ export interface ChannelList {
 export interface VersionInfo {
   current_version: string;
   latest_version: string;
-  update_url: string;
+  update_url_github: string;
+  update_url_gitee: string;
+  changelog_url_github?: string;
+  changelog_url_gitee?: string;
+  check_interval_hours?: number;
   last_check_time?: number;
 }
 
@@ -54,7 +58,7 @@ export interface SkillContext {
 
 // ==================== 安全与工具 ====================
 
-const ALLOWED_DOMAINS = ['www.ebrun.com', 'api.ebrun.com'];
+const ALLOWED_DOMAINS = ['www.ebrun.com', 'api.ebrun.com', 'raw.githubusercontent.com', 'gitee.com'];
 
 /**
  * 安全校验：确保 URL 为 HTTPS 且属于白名单域名，防御 SSRF
@@ -114,6 +118,8 @@ const DEFAULT_CONFIG: ChannelList = {
 
 class EbrunSkill {
   private config: ChannelList | null = null;
+  private localInfo: VersionInfo | null = null;
+  private updateAvailable: { version: string; updateUrl: string; changelogUrl?: string } | null = null;
 
   private loadConfig(): ChannelList {
     if (this.config) return this.config;
@@ -168,7 +174,7 @@ class EbrunSkill {
 
     const fetchFn = context?.fetch || globalThis.fetch;
     const fetchHeaders = {
-      'User-Agent': 'Mozilla/5.0 (EbrunSkill/1.0)',
+      'User-Agent': 'Mozilla/5.0 (EbrunSkill/1.1)',
       'Accept': 'application/json',
       'Referer': 'https://www.ebrun.com/',
     };
@@ -189,37 +195,31 @@ class EbrunSkill {
           return this.parseRawData(data, limit);
         }
       } catch (e) {
-        console.debug('Fetch 策略失效，尝试脚本降级...');
+        // 尝试降级
       }
     }
 
-    const pyPath = join(__dirname, '..', 'scripts', 'fetch_news.py');
-    if (existsSync(pyPath)) {
-      try {
-        const { stdout } = await execFileAsync('python3', [pyPath, apiUrl, '--json'], {
-          encoding: 'utf-8',
-          timeout: 10000
-        });
-        return this.parseRawData(JSON.parse(stdout), limit);
-      } catch (e) {
-        console.debug('Python 策略失效');
+    // 脚本降级策略
+    const strategies = [
+      { cmd: 'python3', path: join(__dirname, '..', 'scripts', 'fetch_news.py'), args: [apiUrl, '--json'] },
+      { cmd: 'bash', path: join(__dirname, '..', 'scripts', 'fetch_news.sh'), args: [apiUrl, '--json'] }
+    ];
+
+    for (const strat of strategies) {
+      if (existsSync(strat.path)) {
+        try {
+          const { stdout } = await execFileAsync(strat.cmd, [strat.path, ...strat.args], {
+            encoding: 'utf-8',
+            timeout: 10000
+          });
+          return this.parseRawData(JSON.parse(stdout), limit);
+        } catch (e) {
+          continue;
+        }
       }
     }
 
-    const shPath = join(__dirname, '..', 'scripts', 'fetch_news.sh');
-    if (existsSync(shPath)) {
-      try {
-        const { stdout } = await execFileAsync('bash', [shPath, apiUrl, '--json'], {
-          encoding: 'utf-8',
-          timeout: 10000
-        });
-        return this.parseRawData(JSON.parse(stdout), limit);
-      } catch (e) {
-        console.debug('Shell 策略失效');
-      }
-    }
-
-    throw new Error('网络连接受阻或 API 无响应，请稍后再试。');
+    throw new Error('网络连接受阻或 API 无响应，请检查环境配置。');
   }
 
   private parseRawData(data: any, limit: number): NewsArticle[] {
@@ -234,54 +234,96 @@ class EbrunSkill {
     }));
   }
 
-  private formatOutput(articles: NewsArticle[], channel: string, isFallback: boolean): string {
+  private formatOutput(articles: NewsArticle[], channel: string, subChannel: string, isFallback: boolean, userInput: string): string {
     if (articles.length === 0) return '📭 当前频道暂无最新文章，请稍后再试。';
 
+    const currentTime = new Date().toLocaleString('zh-CN');
     let output = '';
-    if (isFallback) {
-      output += `💡 未匹配到指定频道，为您推荐 **${channel}** 频道的内容：\n\n`;
+
+    // 1. 处理未匹配提示
+    if (isFallback && userInput) {
+      output += `未找到"${userInput}"频道的文章，将为您展示推荐内容。\n\n`;
     }
 
-    output += `## 📰 亿邦原创新闻 | ${channel}\n\n`;
+    // 2. 标题与时间
+    const subChannelDisplay = subChannel === '最新' ? '' : ` ${subChannel}`;
+    output += `📰 亿邦原创新闻 | ${channel}${subChannelDisplay}\n`;
+    output += `获取时间: ${currentTime}\n`;
+    output += `---\n\n`;
 
+    // 3. 文章列表
     articles.forEach(article => {
       output += `### [${article.title}](${article.url})\n`;
       output += `👤 ${article.author}  ·  🕐 ${article.publishTime}\n`;
-      output += `> ${article.summary}\n\n`;
+      output += `${article.summary}\n\n`;
     });
 
+    // 4. 页脚处理
     output += `---\n`;
-    output += `可用频道：推荐、未来零售、跨境电商、产业互联网、品牌、AI\n`;
-    output += `访问官网获取更多：[亿邦动力网](https://www.ebrun.com/)\n`;
+    if (isFallback) {
+      output += `可用的频道有：\n`;
+      output += `📰 推荐 | 🛒 未来零售 | 🌏 跨境电商 | 🏭 产业互联网 | 🏷️ 品牌 | 🤖 AI\n\n`;
+      output += `您可以直接说：\n`;
+      output += `• "查跨境最新文章" 或 "查亚马逊新闻"\n`;
+      output += `• "产业有什么新动态"\n`;
+      output += `• "看看AI新闻"\n\n`;
+    }
+    output += `更多资讯请见[亿邦官网](https://www.ebrun.com/)\n`;
 
-    const updateTip = this.getUpdateTip();
-    if (updateTip) output += `\n---\n${updateTip}`;
+    // 5. 追加更新提示
+    if (this.updateAvailable) {
+      const { version, updateUrl } = this.updateAvailable;
+      output += `\n---\n💡 检测到有新版本可用（v${version}），如需更新请回复"更新"，或访问 [更新链接](${updateUrl})`;
+    }
 
     return output;
   }
 
-  private getUpdateTip(): string {
-    try {
-      const versionPath = join(__dirname, '..', 'references', 'version.json');
-      if (!existsSync(versionPath)) return '';
-      const info: VersionInfo = JSON.parse(readFileSync(versionPath, 'utf-8'));
-      
-      if (info.latest_version && info.current_version !== info.latest_version) {
-        return `✨ **发现新版本 v${info.latest_version}**\n如需体验最新功能，请访问 [更新地址](${info.update_url})`;
-      }
-    } catch (e) {
-      // 静默失败
+  private loadLocalInfo(): VersionInfo {
+    if (this.localInfo) return this.localInfo;
+    const versionPath = join(__dirname, '..', 'references', 'version.json');
+    this.localInfo = JSON.parse(readFileSync(versionPath, 'utf-8'));
+    return this.localInfo!;
+  }
+
+  /**
+   * 执行更新引导逻辑
+   */
+  private async handleUpdate(ctx: SkillContext): Promise<void> {
+    const local = this.loadLocalInfo();
+    const remoteUrl = local.update_url_github.replace('github.com', 'raw.githubusercontent.com') + '/main/references/version.json';
+    
+    let remote: any = null;
+    const fetchFn = ctx.fetch || globalThis.fetch;
+    if (typeof fetchFn === 'function') {
+      try {
+        const res = await fetchFn(remoteUrl);
+        if (res.ok) remote = await res.json();
+      } catch (e) {}
     }
-    return '';
+
+    if (remote && remote.latest_version !== local.current_version) {
+      const msg = `🚀 **开始更新技能...**\n\n检测到新版本 v${remote.latest_version}，请运行以下指令完成更新：\n\n\`\`\`bash\ngit -C [PATH] pull\n\`\`\`\n\n*(注：[PATH] 为当前技能所在目录。如果你使用的是 Claude Code，我可以自动帮你执行此操作，只需告诉我“帮我执行 git pull”即可)*`;
+      ctx.say ? ctx.say(sanitizeError(msg)) : console.log(sanitizeError(msg));
+    } else {
+      const msg = `✅ 当前已是最新版本 (v${local.current_version})，无需更新。`;
+      ctx.say ? ctx.say(msg) : console.log(msg);
+    }
   }
 
   async run(ctx: SkillContext): Promise<void> {
     const userInput = ctx.input || ctx.args?.join(' ') || '';
+    
+    // 拦截更新命令
+    if (userInput.trim() === '更新' || ctx.args?.[0] === 'update' || ctx.args?.[0] === 'u') {
+      await this.handleUpdate(ctx);
+      return;
+    }
 
     try {
       const { channel, subChannel, isFallback } = this.matchChannel(userInput);
       let limit = ctx.limit || 10;
-      
+
       // 提取数字参数作为 limit
       const argsArray = ctx.args || userInput.split(' ');
       const argLimit = argsArray.find(a => /^\d+$/.test(a));
@@ -291,14 +333,19 @@ class EbrunSkill {
       const config = this.loadConfig();
       const path = config.channels[channel]?.sub_channels[subChannel];
       if (!path) throw new Error(`配置缺失: 无法找到 ${channel} 频道对应的路径`);
-      
+
       const apiUrl = `${config.base_url}${path}`;
 
       if (!ctx.say) console.log(`🔍 正在获取 ${channel}${subChannel === '最新' ? '' : ' - ' + subChannel} 最新动态...\n`);
 
-      const articles = await this.fetchNews(apiUrl, limit, ctx);
-      const output = this.formatOutput(articles, channel, isFallback);
+      // 优化：并行执行新闻获取和后台更新检查
+      // 这样 checkUpdateInBackground 有极大概率在 formatOutput 之前完成
+      const [articles] = await Promise.all([
+        this.fetchNews(apiUrl, limit, ctx),
+        this.checkUpdateInBackground(ctx).catch(() => {}) 
+      ]);
 
+      const output = this.formatOutput(articles, channel, subChannel, isFallback, userInput);
       ctx.say ? ctx.say(output) : console.log(output);
 
     } catch (error: any) {

@@ -75,30 +75,7 @@ description:
 1. 自动切换到「推荐」频道查询
 3. 继续执行步骤3取「推荐」频道数据
 
-### 步骤3：数据获取
-1. 根据匹配结果构造API URL：`{base_url}{channel_path}`
-2. 调用 `scripts/fetch_news.py` 脚本请求 JSON 数据：
-   ```bash
-      python3 {skill_dir}/scripts/fetch_news.py "{api_url}"
-   ```
-   - 脚本自动检测：被上层调用时自动输出 JSON，无需额外参数
-   - 终端直接运行时自动输出 ASCII 表格
-3. 脚本返回 JSON 格式的文章数组
-4. 解析返回的文章列表，按 limit 参数取前 N 条（默认 10 条）
-
-### 步骤4：版本更新检查
-
-**独立执行，不影响主流程**
-
-在后台异步检查是否有新版本：
-
-1. 尝试读取 `references/version.json` 中的 `latest_version` 和 `update_url`
-2. 如果 `latest_version` 大于当前Skill的 `version`（1.0.0）：
-   - 记录更新可用状态，暂存 `update_url`
-
-**注意**：此步骤失败或超时不会影响主流程，仅记录状态供后续使用。
-
-### 步骤5：格式化输出
+### 步骤3：格式化输出
 
 调用 `src/index.ts` 中的 `run()` 方法执行获取并输出结果：
 

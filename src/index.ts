@@ -120,6 +120,7 @@ class EbrunSkill {
   private config: ChannelList | null = null;
   private localInfo: VersionInfo | null = null;
   private updateAvailable: { version: string; updateUrl: string; changelogUrl?: string } | null = null;
+  private isRunning: boolean = false;
 
   private loadConfig(): ChannelList {
     if (this.config) return this.config;
@@ -164,6 +165,14 @@ class EbrunSkill {
       }
     }
 
+    // 策略 C: 通用新闻意图词 → 推荐频道，不触发 fallback 提示
+    // 用户说"查亿邦原创新闻"/"今日电商新闻"等，意图是看新闻而非找特定频道
+    const generalKeywords = ['亿邦', 'ebrun', '原创', '新闻', '资讯', '报道', '文章', '动态', '头条', '今日', '最新'];
+    if (generalKeywords.some(kw => input.includes(kw))) {
+      return { channel: '推荐', subChannel: '最新', isFallback: false };
+    }
+
+    // 以上均未匹配：用户指定了一个不存在的具体频道（如 eBay）
     return { channel: '推荐', subChannel: '最新', isFallback: true };
   }
 
@@ -237,21 +246,21 @@ class EbrunSkill {
   private formatOutput(articles: NewsArticle[], channel: string, subChannel: string, isFallback: boolean, userInput: string): string {
     if (articles.length === 0) return '📭 当前频道暂无最新文章，请稍后再试。';
 
-    const currentTime = new Date().toLocaleString('zh-CN');
+    const currentDate = new Date().toLocaleDateString('zh-CN');
+    const subChannelDisplay = subChannel === '最新' ? '' : ` ${subChannel}`;
     let output = '';
 
-    // 1. 处理未匹配提示
+    // 情况2：频道未匹配，页头前加提示
     if (isFallback && userInput) {
       output += `未找到"${userInput}"频道的文章，将为您展示推荐内容。\n\n`;
     }
 
-    // 2. 标题与时间
-    const subChannelDisplay = subChannel === '最新' ? '' : ` ${subChannel}`;
+    // 页头
     output += `📰 亿邦原创新闻 | ${channel}${subChannelDisplay}\n`;
-    output += `获取时间：${currentTime.split(' ')[0]}\n`;
+    output += `获取时间: ${currentDate}\n`;
     output += `---\n\n`;
 
-    // 3. 文章列表 - 使用标准 Markdown 列表缩进，防止渲染器错误叠加序号
+    // 文章列表
     articles.forEach((article, index) => {
       const num = index + 1;
       output += `${num}. **[${article.title}](${article.url})**\n`;
@@ -259,7 +268,7 @@ class EbrunSkill {
       output += `    📝 ${article.summary}\n\n`;
     });
 
-    // 4. 页脚处理
+    // 页脚
     output += `---\n`;
     if (isFallback) {
       output += `可用的频道有：\n`;
@@ -269,9 +278,9 @@ class EbrunSkill {
       output += `• "产业有什么新动态"\n`;
       output += `• "看看AI新闻"\n\n`;
     }
-    output += `更多资讯请见 [亿邦官网](https://www.ebrun.com/)\n`;
+    output += `更多资讯请见[亿邦官网](https://www.ebrun.com/)\n`;
 
-    // 5. 追加更新提示
+    // 情况3：检测到新版本，追加在页脚之后
     if (this.updateAvailable) {
       const { version, updateUrl } = this.updateAvailable;
       output += `\n---\n💡 检测到有新版本可用（v${version}），如需更新请回复"更新"，或访问 [更新链接](${updateUrl})`;
@@ -369,8 +378,22 @@ class EbrunSkill {
   }
 
   async run(ctx: SkillContext): Promise<void> {
+    // 防止重复执行：如果正在执行中，直接返回
+    if (this.isRunning) {
+      return;
+    }
+    this.isRunning = true;
+
+    try {
+      await this._runInternal(ctx);
+    } finally {
+      this.isRunning = false;
+    }
+  }
+
+  private async _runInternal(ctx: SkillContext): Promise<void> {
     const userInput = ctx.input || ctx.args?.join(' ') || '';
-    
+
     // 拦截更新命令
     if (userInput.trim() === '更新' || ctx.args?.[0] === 'update' || ctx.args?.[0] === 'u') {
       await this.handleUpdate(ctx);

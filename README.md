@@ -24,7 +24,7 @@ git clone https://github.com/EbrunDeveloper/ebrun-original-news.git
 - 🌐 **全覆盖频道分类** - 推荐、未来零售、跨境电商、产业互联网、品牌、AI 六大板块，包含细分垂直子频道
 - 🚀 **三级降级获取机制** - 原生请求 → Python 脚本 → Shell 脚本，确保在受限环境下仍能获取数据
 - 🛡️ **企业级安全加固** - SSRF 防护、错误信息脱敏、域名白名单机制
-- 🔄 **异步版本检查** - 后台自动检测更新，不影响主流程体验
+- 🔄 **异步版本检查与安装引导** - 后台自动检测更新，不直接执行更新，而是提示用户复制安装最新版指令或访问 GitHub / Gitee 更新链接
 - 🐍 **双语言实现** - 同时提供 Python 和 Bash 两个本地脚本版本，按需选择
 
 ### 🎯 触发方式（Claude Code）
@@ -115,6 +115,16 @@ TikTok Shop今日宣布对东南亚市场卖家下调佣金费率，整体降幅
 共 2 篇文章
 ```
 
+### 🔄 更新说明
+
+当检测到 skill 有新版本时，结果末尾会追加更新提示：
+
+- 显示最新版本号
+- 提示用户回复：`请你为我安装亿邦原创Skill最新版 <Gitee更新地址>`
+- 同时提供 GitHub 和 Gitee 更新链接
+
+Skill 本身不会在 `src/index.ts` 中直接执行更新命令，也不会拦截“更新”这类输入。更新动作由上层 AI 根据用户发送的安装指令继续处理，这样更适合 GitHub、Gitee、ClawHub 等不同分发来源。
+
 ### 📁 支持的频道
 
 | 一级频道 | 支持的子频道 |
@@ -148,7 +158,7 @@ ebrun-original-news/
 1. **三级降级机制** - 优先使用原生 fetch，失败后自动降级到 Python/Shell 脚本，绕过 Claude Code 云环境网络限制
 2. **智能模糊匹配** - 支持用户自然语言查询，自动匹配最相关的频道和子频道
 3. **安全加固** - SSRF 防护、域名白名单、错误路径脱敏
-4. **异步更新检查** - 后台并行执行版本检查，有新版本时提示用户
+4. **异步更新检查与安装引导** - 后台并行执行版本检查，有新版本时提示用户复制安装最新版指令或访问 GitHub / Gitee 更新链接
 
 ### 🔒 安全特性
 
@@ -193,7 +203,7 @@ git clone https://github.com/EbrunDeveloper/ebrun-original-news.git
 - 🌐 **Comprehensive Channel Coverage** - Six major categories: Recommendation, Future Retail, Cross-border E-commerce, Industrial Internet, Brands, AI, with vertical sub-channels
 - 🚀 **Three-level Degradation Mechanism** - Native fetch → Python script → Shell script, ensuring data availability in restricted environments
 - 🛡️ **Enterprise-grade Security** - SSRF protection, error message sanitization, domain allowlist
-- 🔄 **Asynchronous Version Check** - Automatic background update checking without affecting main flow
+- 🔄 **Asynchronous Version Check with Install Guidance** - Automatically checks for updates in the background and guides the user to install the latest version instead of executing an in-skill update
 - 🐍 **Dual Implementation** - Both Python and Bash versions provided, choose as needed
 
 ### 🎯 Trigger Phrases (Claude Code)
@@ -281,6 +291,16 @@ More news at [Ebrun Official Website](https://www.ebrun.com/)
 Total 2 articles
 ```
 
+### 🔄 Update Notes
+
+When a new version of the skill is detected, the result footer will include an update prompt that:
+
+- shows the latest version number
+- suggests replying with `请你为我安装亿邦原创Skill最新版 <Gitee update URL>`
+- provides both GitHub and Gitee update links
+
+The skill does not execute update commands directly inside `src/index.ts`, and it does not intercept generic update phrases. The actual installation step is delegated to the upper-layer AI after the user sends the install instruction, which is more reliable across GitHub, Gitee, and ClawHub distribution channels.
+
 ### 📁 Supported Channels
 
 | Primary Channel | Sub-channels |
@@ -314,7 +334,7 @@ ebrun-original-news/
 1. **Three-level Degradation** - Prioritizes native fetch, automatically falls back to Python/Shell scripts to bypass Claude Code cloud environment network restrictions
 2. **Intelligent Fuzzy Matching** - Supports natural language queries, automatically matches the most relevant channel and sub-channel
 3. **Security Hardening** - SSRF protection, domain allowlist, error path sanitization
-4. **Asynchronous Update Check** - Background parallel version checking, prompts user when new version is available
+4. **Asynchronous Update Check with Install Guidance** - Background parallel version checking that prompts the user to install the latest version via the provided instruction or GitHub / Gitee links
 
 ### 🔒 Security Features
 

@@ -119,8 +119,10 @@ const DEFAULT_CONFIG: ChannelList = {
 class EbrunSkill {
   private config: ChannelList | null = null;
   private localInfo: VersionInfo | null = null;
-  private updateAvailable: { version: string; updateUrl: string; changelogUrl?: string } | null = null;
+  private updateAvailable: { version: string; githubUrl: string; giteeUrl: string } | null = null;
   private isRunning: boolean = false;
+  private runStartTime: number = 0;
+  private readonly RUN_TIMEOUT = 30000; // 30秒超时保护
 
   private loadConfig(): ChannelList {
     if (this.config) return this.config;
@@ -282,8 +284,8 @@ class EbrunSkill {
 
     // 情况3：检测到新版本，追加在页脚之后
     if (this.updateAvailable) {
-      const { version, updateUrl } = this.updateAvailable;
-      output += `\n---\n💡 检测到有新版本可用（v${version}），如需更新请回复"更新"，或访问 [更新链接](${updateUrl})`;
+      const { version, githubUrl, giteeUrl } = this.updateAvailable;
+      output += `\n---\n💡 检测到有新版本可用（v${version}）\n如需更新请回复"请你为我安装亿邦原创Skill最新版 ${giteeUrl}"\n或访问 [GitHub](${githubUrl})，[Gitee](${giteeUrl})`;
     }
 
     return output;
@@ -346,59 +348,39 @@ class EbrunSkill {
     if (remote && remote.latest_version !== local.current_version) {
       this.updateAvailable = {
         version: remote.latest_version,
-        updateUrl: local.update_url_github,
-        changelogUrl: local.changelog_url_github
+        githubUrl: local.update_url_github,
+        giteeUrl: local.update_url_gitee
       };
     }
   }
 
-  /**
-   * 执行更新引导逻辑
-   */
-  private async handleUpdate(ctx: SkillContext): Promise<void> {
-    const local = this.loadLocalInfo();
-    const remoteUrl = local.update_url_github.replace('github.com', 'raw.githubusercontent.com') + '/main/references/version.json';
-    
-    let remote: any = null;
-    const fetchFn = ctx.fetch || globalThis.fetch;
-    if (typeof fetchFn === 'function') {
-      try {
-        const res = await fetchFn(remoteUrl);
-        if (res.ok) remote = await res.json() as VersionInfo;
-      } catch (e) {}
-    }
-
-    if (remote && remote.latest_version !== local.current_version) {
-      const msg = `🚀 **开始更新技能...**\n\n检测到新版本 v${remote.latest_version}，请运行以下指令完成更新：\n\n\`\`\`bash\ngit -C [PATH] pull\n\`\`\`\n\n*(注：[PATH] 为当前技能所在目录。如果你使用的是 Claude Code，我可以自动帮你执行此操作，只需告诉我“帮我执行 git pull”即可)*`;
-      ctx.say ? ctx.say(sanitizeError(msg)) : console.log(sanitizeError(msg));
-    } else {
-      const msg = `✅ 当前已是最新版本 (v${local.current_version})，无需更新。`;
-      ctx.say ? ctx.say(msg) : console.log(msg);
-    }
-  }
-
   async run(ctx: SkillContext): Promise<void> {
-    // 防止重复执行：如果正在执行中，直接返回
+    // 防止重复执行：如果正在执行中，检查是否超时
     if (this.isRunning) {
-      return;
+      const elapsed = Date.now() - this.runStartTime;
+      if (elapsed < this.RUN_TIMEOUT) {
+        // 在超时时间内，说明确实在执行中，直接返回
+        console.log('[EbrunSkill] 正在执行中，跳过重复调用');
+        return;
+      }
+      // 已超时，重置状态继续执行
+      console.log('[EbrunSkill] 检测到超时，重置执行状态');
     }
+
     this.isRunning = true;
+    this.runStartTime = Date.now();
 
     try {
       await this._runInternal(ctx);
     } finally {
       this.isRunning = false;
+      this.runStartTime = 0;
     }
   }
 
   private async _runInternal(ctx: SkillContext): Promise<void> {
     const userInput = ctx.input || ctx.args?.join(' ') || '';
 
-    // 拦截更新命令
-    if (userInput.trim() === '更新' || ctx.args?.[0] === 'update' || ctx.args?.[0] === 'u') {
-      await this.handleUpdate(ctx);
-      return;
-    }
 
     try {
       const { channel, subChannel, isFallback } = this.matchChannel(userInput);
@@ -409,6 +391,9 @@ class EbrunSkill {
       const argLimit = argsArray.find(a => /^\d+$/.test(a));
       if (argLimit) limit = parseInt(argLimit, 10);
       limit = Math.min(Math.max(1, limit), 20);
+
+      // 调试日志：记录实际使用的 limit
+      console.log(`[EbrunSkill Debug] ctx.limit=${ctx.limit}, final limit=${limit}, ctx.args=${JSON.stringify(ctx.args)}`);
 
       const config = this.loadConfig();
       const path = config.channels[channel]?.sub_channels[subChannel];

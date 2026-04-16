@@ -19,4 +19,5 @@ commands:
         default: '10'
   - name: update
     description: 检查并引导更新技能到最新版本
+    command: "cd {{skill_root}} && git pull origin main"
     alias: u

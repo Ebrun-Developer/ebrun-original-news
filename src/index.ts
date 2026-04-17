@@ -27,6 +27,7 @@ export interface NewsArticle {
 
 export interface ChannelConfig {
   id: string;
+  aliases?: string[];
   sub_channels: Record<string, string>;
 }
 
@@ -159,10 +160,14 @@ class EbrunSkill {
     }
 
     // 策略 B: 匹配主频道关键词
-    for (const channelName of Object.keys(config.channels)) {
-      const cnLower = channelName.toLowerCase();
+    for (const [channelName, channelData] of Object.entries(config.channels)) {
+      const channelKeywords = [channelName, ...(channelData.aliases || [])].map(keyword => keyword.toLowerCase());
       // 支持 "跨境" 匹配 "跨境电商"，也支持 "跨境电商新闻" 匹配 "跨境电商"
-      if (input.includes(cnLower) || cnLower.includes(input) || inputWords.some(w => cnLower.includes(w) || w.includes(cnLower))) {
+      if (channelKeywords.some(keyword =>
+        input.includes(keyword) ||
+        keyword.includes(input) ||
+        inputWords.some(w => keyword.includes(w) || w.includes(keyword))
+      )) {
         return { channel: channelName, subChannel: '最新', isFallback: false };
       }
     }
@@ -205,8 +210,11 @@ class EbrunSkill {
           const data = await response.json();
           return this.parseRawData(data, limit);
         }
+
+        console.warn(`[EbrunSkill] Fetch returned status ${response.status}, falling back to local scripts`);
       } catch (e) {
-        // 尝试降级
+        const reason = e instanceof Error ? e.message : String(e);
+        console.warn(`[EbrunSkill] Fetch failed, falling back to local scripts: ${sanitizeError(reason)}`);
       }
     }
 
@@ -219,6 +227,7 @@ class EbrunSkill {
     for (const strat of strategies) {
       if (existsSync(strat.path)) {
         try {
+          console.warn(`[EbrunSkill] Executing fallback via ${strat.cmd}: ${strat.path}`);
           const { stdout } = await execFileAsync(strat.cmd, [strat.path, ...strat.args], {
             encoding: 'utf-8',
             timeout: 10000

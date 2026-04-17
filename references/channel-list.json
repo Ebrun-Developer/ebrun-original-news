@@ -9,6 +9,7 @@
     },
     "未来零售": {
       "id": "weilai-lingshou",
+      "aliases": ["零售", "电商零售"],
       "sub_channels": {
         "最新": "_index/ClaudeCode/SkillJson/information_channel_50.json",
         "淘宝天猫": "_index/ClaudeCode/SkillJson/information_channel_55.json",
@@ -23,6 +24,7 @@
     },
     "跨境电商": {
       "id": "kuajing-dianshang",
+      "aliases": ["跨境", "跨境新闻"],
       "sub_channels": {
         "最新": "_index/ClaudeCode/SkillJson/information_channel_51.json",
         "亚马逊": "_index/ClaudeCode/SkillJson/information_channel_68.json",
@@ -34,6 +36,7 @@
     },
     "产业互联网": {
       "id": "chanye-hulianwang",
+      "aliases": ["产业", "产业新闻"],
       "sub_channels": {
         "最新": "_index/ClaudeCode/SkillJson/information_channel_52.json",
         "B2B": "_index/ClaudeCode/SkillJson/information_channel_77.json",
@@ -46,6 +49,7 @@
     },
     "品牌": {
       "id": "pinpai",
+      "aliases": ["品牌新闻"],
       "sub_channels": {
         "最新": "_index/ClaudeCode/SkillJson/information_channel_87.json",
         "新竞争力品牌": "_index/ClaudeCode/SkillJson/information_channel_89.json",
@@ -54,6 +58,7 @@
     },
     "AI": {
       "id": "ai",
+      "aliases": ["人工智能", "ai新闻"],
       "sub_channels": {
         "最新": "_index/ClaudeCode/SkillJson/information_channel_88.json"
       }

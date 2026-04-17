@@ -142,6 +142,7 @@ description:
 
 | 文件路径 | 用途 |
 |----------|------|
+| `src/index.ts` | 技能主入口，统一负责频道匹配、API 请求、脚本降级、版本检查、结果格式化与异常处理 |
 | `scripts/fetch_news.py` | 本地获取数据脚本，Python 版本，自动适配输出格式 |
 | `scripts/fetch_news.sh` | 本地获取数据脚本，Shell 版本，自动适配输出格式 |
 | `references/channel-list.json` | 频道配置列表，包含所有频道和子频道的映射关系 |

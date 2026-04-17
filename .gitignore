@@ -15,7 +15,12 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-dist/
+dist/*
+!dist/.gitkeep
+!dist/index.js
+!dist/index.d.ts
+!dist/index.d.ts.map
+!dist/index.js.map
 .env
 .env.local
 *.log

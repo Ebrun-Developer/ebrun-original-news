@@ -5,6 +5,14 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "references",
+    "scripts",
+    "SKILL.md",
+    "README.md",
+    "package.json"
+  ],
   "engines": {
     "node": ">=18"
   },

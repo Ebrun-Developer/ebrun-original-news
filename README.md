@@ -149,7 +149,6 @@ ebrun-original-news/
 │   ├── channel-list.json # 频道配置列表
 │   └── version.json     # 版本信息（用于更新检查）
 ├── SKILL.md             # Claude Code Skill 规范定义
-├── skill.yaml           # Skill 元数据
 └── api-reference.md     # API 接口文档
 ```
 
@@ -325,7 +324,6 @@ ebrun-original-news/
 │   ├── channel-list.json # Channel configuration
 │   └── version.json     # Version info for update checking
 ├── SKILL.md             # Claude Code Skill specification
-├── skill.yaml           # Skill metadata
 └── api-reference.md     # API documentation
 ```
 

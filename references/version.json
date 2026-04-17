@@ -1,11 +1,11 @@
 {
-  "current_version": "1.0.1",
-  "latest_version": "1.0.1",
+  "current_version": "1.0.0",
+  "latest_version": "1.0.0",
   "update_url_github": "https://github.com/Ebrun-Developer/ebrun-original-news",
   "update_url_gitee": "https://gitee.com/ebrun-developer/ebrun-original-news",
   "changelog_url_github": "https://github.com/Ebrun-Developer/ebrun-original-news/blob/main/CHANGELOG.md",
   "changelog_url_gitee": "https://gitee.com/ebrun-developer/ebrun-original-news/blob/main/CHANGELOG.md",
-  "check_interval_hours": 0.01,
+  "check_interval_hours": 0.001,
   "last_check_time": 0,
   "notes": ""
 }

@@ -1,363 +1,224 @@
 # ebrun-original-news
 
-[中文](#中文) | [English](#english)
+一个用于获取亿邦动力原创电商新闻的 Claude Code Skill，支持按频道读取最新内容，并返回适合代理或自动化流程消费的结构化结果。
 
----
+### 项目简介
 
-## 中文
+`ebrun-original-news` 面向需要快速获取电商资讯的使用场景，能够根据自然语言中的频道意图，读取亿邦动力对应栏目下的最新文章，并整理为清晰、稳定的输出。
 
-获取 **亿邦动力网** 最新电商新闻报道。一个为 Claude Code / OpenClaw 设计的 Skill，支持智能关键词匹配与多格式自适应输出。
+它适合以下任务：
 
-### 📦 安装
+- 查询推荐频道或指定频道的最新文章
+- 按电商赛道快速浏览近期动态
+- 在上层 Agent、自动化脚本或信息聚合流程中复用
 
-```bash
-git clone https://github.com/EbrunDeveloper/ebrun-original-news.git
-```
+### 主要能力
 
-安装后请直接执行 `dist/index.js`，不要依赖 `ts-node src/index.ts`。仓库会随技能一起分发预编译产物，适合在未安装 `ts-node` 的环境中直接运行。
+- 支持主频道与子频道匹配，例如推荐、未来零售、跨境电商、产业互联网、品牌、AI
+- 默认返回最新 10 篇文章
+- 输出核心字段，包括标题、作者、摘要、发布时间与原文链接
+- 内置 Python 与 Shell 两套抓取脚本，便于不同运行环境接入
+- 提供版本检查脚本，便于判断 skill 是否有可用更新
+- 当频道无法匹配时，自动回退到推荐频道，保证结果可用性
 
-### ✨ 功能特性
+### 目录结构
 
-- 🔍 **智能关键词匹配** - 根据自然语言查询自动识别目标频道，支持主频道和子频道二级匹配
-- 📊 **多环境自适应输出**：
-  - Claude Code 对话输出 **Markdown**（可点击链接，阅读舒适）
-  - OpenClaw 终端自动输出 **ASCII 表格**（整洁美观）
-  - 程序调用返回标准 **JSON** 便于二次处理
-- 🌐 **全覆盖频道分类** - 推荐、未来零售、跨境电商、产业互联网、品牌、AI 六大板块，包含细分垂直子频道
-- 🚀 **三级降级获取机制** - 原生请求 → Python 脚本 → Shell 脚本，确保在受限环境下仍能获取数据
-- 🛡️ **企业级安全加固** - SSRF 防护、错误信息脱敏、域名白名单机制
-- 🔄 **异步版本检查与安装引导** - 后台自动检测更新，不直接执行更新，而是提示用户复制安装最新版指令或访问 GitHub / Gitee 更新链接
-- 🐍 **双语言实现** - 同时提供 Python 和 Bash 两个本地脚本版本，按需选择
-
-### 🎯 触发方式（Claude Code）
-
-以下任意语句都可以触发此技能：
-
-- `查亿邦最新文章` - 获取亿邦动力网最新推荐文章
-- `查跨境最新文章` - 获取跨境电商相关最新文章
-- `产业最新报道` - 获取产业互联网相关报道
-- `零售最新报道` - 获取未来零售相关报道
-- `今日电商新闻` - 获取今日最新电商新闻
-- `亚马逊最新消息` - 获取亚马逊子频道文章
-- `看看有什么AI新闻` - 获取AI频道最新文章
-- `品牌全球化报道` - 获取品牌全球化子频道文章
-- `亿邦动力` - 快捷触发
-- `电商新闻` - 快捷触发
-
-### 🖥️ 命令行使用
-
-#### Python 版本 (`fetch_news.py`)
-
-```bash
-# 自动检测输出格式（终端 → 表格，被程序调用 → JSON）
-python3 scripts/fetch_news.py <api_url>
-
-# 强制输出 JSON（供上层程序调用）
-python3 scripts/fetch_news.py <api_url> --json
-
-# 强制输出 ASCII 表格（终端查看）
-python3 scripts/fetch_news.py <api_url> --table
-
-# 查看帮助
-python3 scripts/fetch_news.py --help
-```
-
-#### Shell 版本 (`fetch_news.sh`)
-
-```bash
-# 自动检测输出格式（终端 → 表格，被程序调用 → JSON）
-bash scripts/fetch_news.sh <api_url>
-
-# 强制输出 JSON
-bash scripts/fetch_news.sh <api_url> --json
-
-# 强制输出 ASCII 表格
-bash scripts/fetch_news.sh <api_url> --table
-
-# 查看帮助
-bash scripts/fetch_news.sh --help
-```
-
-### 📋 输出示例
-
-#### Claude Code 对话 (Markdown)
-
-```
-📰 亿邦原创新闻 | 跨境电商 亚马逊
-获取时间: 2026/4/14 14:30:00
----
-
-### [TikTok Shop 宣布东南亚新政策，佣金下调5%](https://www.ebrun.com/article/12345)
-👤 张晓明  ·  🕐 2026-04-13 10:30
-TikTok Shop今日宣布对东南亚市场卖家下调佣金费率，整体降幅约5%，旨在吸引更多品牌卖家入驻...
-
-### [亚马逊发布Q1财报，跨境卖家营收增长超预期](https://www.ebrun.com/article/12346)
-👤 李思思  ·  🕐 2026-04-13 09:15
-亚马逊发布2026年第一季度财报，跨境电商业务营收同比增长18%，超出市场预期...
-
----
-更多资讯请见[亿邦官网](https://www.ebrun.com/)
-```
-
-#### 终端表格输出 (ASCII)
-
-```
-┌───────────────────────────────────────────────────────────────────┐
-│  亿邦动力网 - 跨境电商 - 亚马逊                                     │
-├───────────────────────────────────────────────────────────────────┤
-│   1. TikTok Shop 宣布东南亚新政策，佣金下调5%                      │
-│       👤 张晓明             🕐 2026-04-13 10:30                   │
-│       https://www.ebrun.com/article/12345                         │
-├───────────────────────────────────────────────────────────────────┤
-│   2. 亚马逊发布Q1财报，跨境卖家营收增长超预期                      │
-│       👤 李思思             🕐 2026-04-13 09:15                   │
-│       https://www.ebrun.com/article/12346                         │
-└───────────────────────────────────────────────────────────────────┘
-
-共 2 篇文章
-```
-
-### 🔄 更新说明
-
-当检测到 skill 有新版本时，结果末尾会追加更新提示：
-
-- 显示最新版本号
-- 提示用户回复：`请你为我安装亿邦原创Skill最新版 <Gitee更新地址>`
-- 同时提供 GitHub 和 Gitee 更新链接
-
-Skill 本身不会在 `dist/index.js` 中直接执行更新命令，也不会拦截“更新”这类输入。更新动作由上层 AI 根据用户发送的安装指令继续处理，这样更适合 GitHub、Gitee、ClawHub 等不同分发来源。
-
-### 📁 支持的频道
-
-| 一级频道 | 支持的子频道 |
-|---------|-------------|
-| 📰 **推荐** | 最新 |
-| 🛒 **未来零售** | 最新、淘宝天猫、抖音、京东、视频号、美团、快手、拼多多、小红书 |
-| 🌏 **跨境电商** | 最新、亚马逊、阿里国际、TikTok、Temu、SHEIN |
-| 🏭 **产业互联网** | 最新、B2B、产业科技、数据要素、产业出海、数智供应链、数智化采购 |
-| 🏷️ **品牌** | 最新、新竞争力品牌、品牌全球化 |
-| 🤖 **AI** | 最新 |
-
-### 🏗️ 技术架构
-
-```
+```text
 ebrun-original-news/
-├── dist/
-│   └── index.js          # 预编译运行入口，安装后直接执行
-├── src/
-│   └── index.ts          # 源码入口，构建后生成 dist/index.js
-├── scripts/
-│   ├── fetch_news.py    # Python 本地获取脚本
-│   └── fetch_news.sh    # Shell 本地获取脚本
+├── SKILL.md
+├── README.md
+├── examples.md
 ├── references/
-│   ├── channel-list.json # 频道配置列表
-│   └── version.json     # 版本信息（用于更新检查）
-├── SKILL.md             # Claude Code Skill 规范定义
-└── api-reference.md     # API 接口文档
+│   ├── api-reference.md
+│   ├── channel-list.json
+│   └── version.json
+└── scripts/
+    ├── fetch_news.py
+    ├── fetch_news.sh
+    ├── update.py
+    └── update.sh
 ```
 
-**核心设计：**
+### 触发示例
 
-1. **三级降级机制** - 优先使用原生 fetch，失败后自动降级到 Python/Shell 脚本，绕过 Claude Code 云环境网络限制
-2. **智能模糊匹配** - 支持用户自然语言查询，自动匹配最相关的频道和子频道
-3. **安全加固** - SSRF 防护、域名白名单、错误路径脱敏
-4. **异步更新检查与安装引导** - 后台并行执行版本检查，有新版本时提示用户复制安装最新版指令或访问 GitHub / Gitee 更新链接
-5. **预编译发布** - 默认分发 `dist/index.js`，避免目标机器依赖 `ts-node`
+以下表达适合触发该 skill：
 
-### 🔒 安全特性
+- `查亿邦最新文章`
+- `查跨境最新文章`
+- `查亚马逊新闻`
+- `产业有什么新动态`
+- `看看 AI 新闻`
+- `看品牌全球化报道`
 
-| 安全措施 | 说明 |
-|---------|------|
-| 域名白名单 | 仅允许请求 `ebrun.com` 和更新域名，防止 SSRF 攻击 |
-| HTTPS 强制 | 只允许 HTTPS 请求，禁止 HTTP 和 IP 直连 |
-| 错误脱敏 | 错误信息中的本地路径自动脱敏，保护用户隐私 |
-| 参数校验 | 对所有输入参数进行长度和类型校验 |
+### 使用方式
 
-### 📡 数据来源
+#### 1. 通过自然语言调用
 
-- [亿邦动力网](https://www.ebrun.com/)
+在支持 Claude Code Skill 的环境中，可直接使用自然语言描述要查询的频道或主题，skill 会根据 `references/channel-list.json` 自动完成频道识别与调用。
 
-### 👨‍💼 作者
+#### 2. 通过脚本直接调用
 
-EbrunDeveloper
+优先使用内置脚本，而不是在外部重复编写抓取逻辑。
 
-### 📄 许可证
+```bash
+# 查询 AI 频道最新 10 篇
+python3 scripts/fetch_news.py "_index/ClaudeCode/SkillJson/information_channel_88" --json --limit 10
 
-MIT License - 详见 [LICENSE](LICENSE)
+# 查询推荐频道最新 10 篇
+python3 scripts/fetch_news.py "_index/ClaudeCode/SkillJson/information_recommend" --json --limit 10
 
----
+# Python 不可用时使用 Shell 版本
+bash scripts/fetch_news.sh "_index/ClaudeCode/SkillJson/information_channel_88" --json --limit 10
+```
+
+#### 3. 检查更新
+
+```bash
+# 常规检查
+python3 scripts/update.py --json
+
+# 强制忽略检查间隔
+python3 scripts/update.py --json --force
+```
+
+### 输出说明
+
+默认返回适合进一步处理的结构化新闻数据。典型内容包括：
+
+- `title`
+- `author`
+- `summary`
+- `publish_time`
+- `url`
+
+在面向终端用户展示时，可进一步格式化为 Markdown 列表或资讯简报。
+
+### 适用边界
+
+推荐用于：
+
+- 电商新闻检索
+- 特定频道的最新内容浏览
+- 自动化资讯收集与汇总
+
+不建议用于：
+
+- 非电商领域新闻查询
+- 历史归档检索
+- 超出当前频道映射范围的定制查询
+
+### 原创性与隐私说明
+
+- 本 README 基于本仓库内的 `SKILL.md`、示例和脚本能力重新整理编写，不直接复制内部说明文本。
+- 文档仅描述公开可用的功能、目录与使用方式，不暴露任何个人隐私信息、账号信息、Cookie 或凭证内容。
+- 示例命令与示例查询仅用于说明调用方式，不包含用户数据或业务敏感内容。
+- 如将本 skill 接入生产流程，建议继续遵循最小化日志、最小化输入保留和凭证隔离原则。
 
 ## English
 
-Get the latest e-commerce news from **[Ebrun](https://www.ebrun.com/)**, a leading Chinese e-commerce industry media. A Claude Code / OpenClaw Skill that features intelligent keyword matching and multi-format adaptive output.
+### Overview
 
-### 📦 Installation
+`ebrun-original-news` is a Claude Code skill for fetching the latest original e-commerce news from Ebrun. It maps user intent to predefined channels, retrieves recent articles, and returns clean structured data for downstream use.
 
-```bash
-git clone https://github.com/EbrunDeveloper/ebrun-original-news.git
-```
+Typical use cases include:
 
-### ✨ Features
+- reading the latest news from a main or sub-channel
+- tracking updates across e-commerce sectors
+- integrating Ebrun news retrieval into an agent or automation workflow
 
-- 🔍 **Intelligent Keyword Matching** - Automatically identifies target channels based on natural language queries, supports primary and secondary channel matching
-- 📊 **Multi-environment Adaptive Output**:
-  - **Markdown** for Claude Code conversations (clickable links, comfortable reading)
-  - **ASCII Table** for OpenClaw terminal (clean and beautiful)
-  - Standard **JSON** for programmatic access
-- 🌐 **Comprehensive Channel Coverage** - Six major categories: Recommendation, Future Retail, Cross-border E-commerce, Industrial Internet, Brands, AI, with vertical sub-channels
-- 🚀 **Three-level Degradation Mechanism** - Native fetch → Python script → Shell script, ensuring data availability in restricted environments
-- 🛡️ **Enterprise-grade Security** - SSRF protection, error message sanitization, domain allowlist
-- 🔄 **Asynchronous Version Check with Install Guidance** - Automatically checks for updates in the background and guides the user to install the latest version instead of executing an in-skill update
-- 🐍 **Dual Implementation** - Both Python and Bash versions provided, choose as needed
+### Key Features
 
-### 🎯 Trigger Phrases (Claude Code)
+- Main-channel and sub-channel matching
+- Up to 10 latest articles by default
+- Structured outputs with title, author, summary, publish time, and source URL
+- Both Python and shell fetch scripts for flexible integration
+- Built-in update checker for version awareness
+- Automatic fallback to the recommended channel when no channel matches
 
-This Skill is triggered when user says:
+### Project Layout
 
-- "查亿邦最新文章" (Check latest Ebrun articles)
-- "查跨境最新文章" (Check latest cross-border articles)
-- "产业最新报道" (Industry latest reports)
-- "零售最新报道" (Retail latest reports)
-- "今日电商新闻" (Today's e-commerce news)
-- "亚马逊最新消息" (Latest news from Amazon)
-- "看看有什么AI新闻" (Check latest AI news)
-
-### 🖥️ Command Line Usage
-
-#### Python version (`fetch_news.py`)
-
-```bash
-# Auto-detect format (table in terminal, JSON for program call)
-python3 scripts/fetch_news.py <api_url>
-
-# Force JSON output (for program call)
-python3 scripts/fetch_news.py <api_url> --json
-
-# Force ASCII table output (terminal viewing)
-python3 scripts/fetch_news.py <api_url> --table
-
-# Show help
-python3 scripts/fetch_news.py --help
-```
-
-#### Shell version (`fetch_news.sh`)
-
-```bash
-# Auto-detect format (table in terminal, JSON for program call)
-bash scripts/fetch_news.sh <api_url>
-
-# Force JSON output
-bash scripts/fetch_news.sh <api_url> --json
-
-# Force ASCII table output (terminal viewing)
-bash scripts/fetch_news.sh <api_url> --table
-
-# Show help
-bash scripts/fetch_news.sh --help
-```
-
-### 📋 Output Example
-
-#### Claude Code Conversation (Markdown)
-
-```
-📰 亿邦原创新闻 | 跨境电商 亚马逊
-获取时间: 2026/4/14 14:30:00
----
-
-### [TikTok Shop 宣布东南亚新政策，佣金下调5%](https://www.ebrun.com/article/12345)
-👤 张晓明  ·  🕐 2026-04-13 10:30
-TikTok Shop今日宣布对东南亚市场卖家下调佣金费率，整体降幅约5%，旨在吸引更多品牌卖家入驻...
-
-### [亚马逊发布Q1财报，跨境卖家营收增长超预期](https://www.ebrun.com/article/12346)
-👤 李思思  ·  🕐 2026-04-13 09:15
-亚马逊发布2026年第一季度财报，跨境电商业务营收同比增长18%，超出市场预期...
-
----
-More news at [Ebrun Official Website](https://www.ebrun.com/)
-```
-
-#### Terminal Table Output (ASCII)
-
-```
-┌───────────────────────────────────────────────────────────────────┐
-│  亿邦动力网 - 跨境电商 - 亚马逊                                     │
-├───────────────────────────────────────────────────────────────────┤
-│   1. TikTok Shop 宣布东南亚新政策，佣金下调5%                      │
-│       👤 张晓明             🕐 2026-04-13 10:30                   │
-│       https://www.ebrun.com/article/12345                         │
-├───────────────────────────────────────────────────────────────────┤
-│   2. 亚马逊发布Q1财报，跨境卖家营收增长超预期                      │
-│       👤 李思思             🕐 2026-04-13 09:15                   │
-│       https://www.ebrun.com/article/12346                         │
-└───────────────────────────────────────────────────────────────────┘
-
-Total 2 articles
-```
-
-### 🔄 Update Notes
-
-When a new version of the skill is detected, the result footer will include an update prompt that:
-
-- shows the latest version number
-- suggests replying with `请你为我安装亿邦原创Skill最新版 <Gitee update URL>`
-- provides both GitHub and Gitee update links
-
-The skill does not execute update commands directly inside `dist/index.js`, and it does not intercept generic update phrases. The actual installation step is delegated to the upper-layer AI after the user sends the install instruction, which is more reliable across GitHub, Gitee, and ClawHub distribution channels.
-
-### 📁 Supported Channels
-
-| Primary Channel | Sub-channels |
-|-----------------|-------------|
-| 📰 **Recommendation** | Latest |
-| 🛒 **Future Retail** | Latest, Taobao Tmall, Douyin, JD, Video Channel, Meituan, Kuaishou, Pinduoduo, Xiaohongshu |
-| 🌏 **Cross-border E-commerce** | Latest, Amazon, Alibaba International, TikTok, Temu, SHEIN |
-| 🏭 **Industrial Internet** | Latest, B2B, Industrial Tech, Data Elements, Industrial Going Global, Digital Supply Chain |
-| 🏷️ **Brands** | Latest, Competitive Brands, Brand Globalization |
-| 🤖 **AI** | Latest |
-
-### 🏗️ Technical Architecture
-
-```
+```text
 ebrun-original-news/
-├── dist/
-│   └── index.js          # Prebuilt runtime entry, executed directly after installation
-├── src/
-│   └── index.ts          # Source entry, compiled into dist/index.js
-├── scripts/
-│   ├── fetch_news.py    # Python local fetch script
-│   └── fetch_news.sh    # Shell local fetch script
+├── SKILL.md
+├── README.md
+├── examples.md
 ├── references/
-│   ├── channel-list.json # Channel configuration
-│   └── version.json     # Version info for update checking
-├── SKILL.md             # Claude Code Skill specification
-└── api-reference.md     # API documentation
+│   ├── api-reference.md
+│   ├── channel-list.json
+│   └── version.json
+└── scripts/
+    ├── fetch_news.py
+    ├── fetch_news.sh
+    ├── update.py
+    └── update.sh
 ```
 
-**Core Design:**
+### Example Triggers
 
-1. **Three-level Degradation** - Prioritizes native fetch, automatically falls back to Python/Shell scripts to bypass Claude Code cloud environment network restrictions
-2. **Intelligent Fuzzy Matching** - Supports natural language queries, automatically matches the most relevant channel and sub-channel
-3. **Security Hardening** - SSRF protection, domain allowlist, error path sanitization
-4. **Asynchronous Update Check with Install Guidance** - Background parallel version checking that prompts the user to install the latest version via the provided instruction or GitHub / Gitee links
+This skill is designed for requests such as:
 
-### 🔒 Security Features
+- `Check the latest Ebrun articles`
+- `Show me the latest cross-border news`
+- `Get Amazon-related news`
+- `What is new in industrial internet`
+- `Show me AI news`
+- `Give me brand globalization updates`
 
-| Security Measure | Description |
-|-----------------|-------------|
-| Domain Allowlist | Only allows requests to authorized domains, prevents SSRF attacks |
-| HTTPS Enforced | Only allows HTTPS requests, prohibits HTTP and direct IP connections |
-| Error Sanitization | Local paths in error messages are automatically redacted to protect user privacy |
-| Parameter Validation | Validates all input parameters for length and type |
+### Usage
 
-### 📡 Data Source
+#### 1. Natural language invocation
 
-- [Ebrun](https://www.ebrun.com/)
+In a Claude Code environment that supports skills, users can ask for a channel or topic in plain language. The skill reads channel mappings from `references/channel-list.json` and resolves the target automatically.
 
-### 👨‍💼 Author
+#### 2. Direct script usage
 
-EbrunDeveloper
+Prefer the built-in scripts instead of reimplementing fetch logic externally.
 
-### 📄 License
+```bash
+# Fetch the latest 10 AI articles
+python3 scripts/fetch_news.py "_index/ClaudeCode/SkillJson/information_channel_88" --json --limit 10
 
-MIT License - see [LICENSE](LICENSE) for details
+# Fetch the latest 10 recommended articles
+python3 scripts/fetch_news.py "_index/ClaudeCode/SkillJson/information_recommend" --json --limit 10
+
+# Shell fallback when Python is unavailable
+bash scripts/fetch_news.sh "_index/ClaudeCode/SkillJson/information_channel_88" --json --limit 10
+```
+
+#### 3. Version check
+
+```bash
+python3 scripts/update.py --json
+python3 scripts/update.py --json --force
+```
+
+### Output
+
+The skill is designed to return structured news items that are easy to format into markdown, dashboards, or briefings. Typical fields include:
+
+- `title`
+- `author`
+- `summary`
+- `publish_time`
+- `url`
+
+### Scope
+
+Recommended for:
+
+- e-commerce news retrieval
+- channel-based latest article discovery
+- automation and agent-based news aggregation
+
+Not intended for:
+
+- non-e-commerce news topics
+- historical archive browsing
+- arbitrary queries outside the configured channel mapping
+
+### Originality and Privacy Notes
+
+- This README is newly written from the repository materials and is not a direct copy of the internal skill instructions.
+- It documents only functional behavior, file structure, and usage patterns, without exposing personal data, credentials, cookies, or other sensitive information.
+- Example prompts and commands are generic and contain no user-specific or operationally sensitive content.
+- For production use, it is still best to keep logs minimal, isolate credentials, and avoid retaining unnecessary request data.

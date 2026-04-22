@@ -28,6 +28,8 @@ DEFAULT_RETRIES = 3
 DEFAULT_CHECK_INTERVAL_HOURS = 24
 VERSION_API_URL = 'https://www.ebrun.com/_index/ClaudeCode/SkillJson/skill_version.json'
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+# 优先使用 Gitee 作为降级源，避免 GitHub 速率限制
+DEFAULT_FALLBACK_ORDER = ['gitee', 'github']
 ALLOWED_DOMAINS = ['www.ebrun.com', 'api.ebrun.com', 'github.com', 'raw.githubusercontent.com', 'gitee.com']
 VERSION_FILE = Path(__file__).resolve().parent.parent / 'references' / 'version.json'
 CACHE_FILE = Path(tempfile.gettempdir()) / f'{SKILL_NAME}-version-cache.json'
@@ -321,8 +323,8 @@ def build_repo_version_file_urls(repo_url: str) -> list[str]:
 
 def fetch_repo_version_info(local_info: Dict[str, Any], timeout: int, retries: int) -> Dict[str, Any]:
     repo_sources = [
-        ('github_version_json', str(local_info.get('update_url_github', '')).strip()),
         ('gitee_version_json', str(local_info.get('update_url_gitee', '')).strip()),
+        ('github_version_json', str(local_info.get('update_url_github', '')).strip()),
     ]
     errors: list[str] = []
 
@@ -348,7 +350,11 @@ def fetch_repo_version_info(local_info: Dict[str, Any], timeout: int, retries: i
                     'version_file_url': candidate_url,
                 }
             except UpdateCheckError as error:
-                errors.append(f'{candidate_url}: {error}')
+                # 专门处理 GitHub 速率限制错误
+                if '429' in str(error) and 'github' in candidate_url:
+                    errors.append(f'{candidate_url}: GitHub API 速率限制，将尝试 Gitee 源')
+                else:
+                    errors.append(f'{candidate_url}: {error}')
 
     raise UpdateCheckError('；'.join(errors) if errors else '无法从 GitHub/Gitee 远端仓库读取 references/version.json', EXIT_REQUEST_ERROR)
 

@@ -611,12 +611,12 @@ main() {
     else
         local repo_fetch_payload="" repo_fetch_ok=false repo_source_name="" repo_version_json="" repo_current_version=""
 
-        if [ -n "$github_url" ] && repo_fetch_payload=$(fetch_repo_version_json "$github_url" "$timeout" "$retries" 2>/dev/null); then
-            repo_fetch_ok=true
-            result_source="github_version_json"
-        elif [ -n "$gitee_url" ] && repo_fetch_payload=$(fetch_repo_version_json "$gitee_url" "$timeout" "$retries" 2>/dev/null); then
+        if [ -n "$gitee_url" ] && repo_fetch_payload=$(fetch_repo_version_json "$gitee_url" "$timeout" "$retries" 2>/dev/null); then
             repo_fetch_ok=true
             result_source="gitee_version_json"
+        elif [ -n "$github_url" ] && repo_fetch_payload=$(fetch_repo_version_json "$github_url" "$timeout" "$retries" 2>/dev/null); then
+            repo_fetch_ok=true
+            result_source="github_version_json"
         fi
 
         if $repo_fetch_ok; then
